@@ -44,11 +44,13 @@ def decrypt(dict_list):
         for j in enc_list:
             # creating a new hashlib function by iterating over the algorithms from list
             h = hashlib.new(j)
-            temp = i                                    # creating a copy to manipulate the data
+            temp = i 
+            # creating a copy to manipulate the data
             # encoding the ascii to byte and then passing it to hash function
             h.update(temp.encode())
             # combinbing the hash without the whitespace and newline
             temp = h.hexdigest()
+            
         # if needed we can update the algorithm that cracked the password
 
         # iterating over the dictionary, manipulating the data with cracked password
@@ -89,39 +91,40 @@ def ceasar_cipher(dict_list):
 
 def leetspeak_decrypt(dict_list):
     updated_list = []
-    # leetspeak_dict = {'A':'4', 'B':'8', 'E':'3', 'G':'6', 'I': '1', 'L':'1', 'O':'0', 'S':'5', 'T':'7', 'Z':'2',
-    #                   'a':'4', 'b':'8', 'e':'3', 'g':'6', 'i': '1', 'l':'1', 'o':'0', 's':'5', 't':'7', 'z':'2' }
-    
-    leetspeak_dict = {'A':'4', 'E':'3', 'I': '1', 'O':'0', 'S':'5','T':'7', 'Z':'2',
-                      'a':'4', 'e':'3', 'i': '1', 'o':'0', 's':'5','t':'7', 'z':'2'}
+    leetspeak_dict = {'A':'4', 'E':'3', 'I': '1', 'O':'0', 'T':'7','S':'5',
+                      'a':'4','e':'3',  'i': '1', 'o':'0', 't':'7','s':'5' }
     
     for i in dict_list:
         word_list = list(i)
         for j,char in enumerate(word_list):
             if char in leetspeak_dict:
+                # print(char, leetspeak_dict[char])
                 word_list[j] = leetspeak_dict[char]
-                # print(type(char))
                 
                         
         updated_word = ''.join(word_list)
         updated_list.append(updated_word)
+    # print(updated_list)
 
     return updated_list
 
 
-def salted_decryption(dict_list, batch_size=1000):
+def salted_decryption(dict_list, batch_size=1000000):
     batch = []
     # Using itertools.product to generate all combinations of length 5 from digits 0-9
     digits = '0123456789'
     possible_combinations = itertools.product(digits, repeat=5)
 
     # Join the tuple to form a string and print
+    comb = 0
     for combo in possible_combinations:
         all_digits = ''.join(combo)
         for i in dict_list:
+            comb += 1
             batch.append(i + all_digits)
             if len(batch) >= batch_size:
                 decrypt(batch)
+                print(comb)
                 batch.clear()
     if batch:
         decrypt(batch)
@@ -132,7 +135,7 @@ def salted_decryption(dict_list, batch_size=1000):
 ceasar_list = ceasar_cipher(orig_dict_list)
 leetspeak_list = leetspeak_decrypt(orig_dict_list)
 salted_decrypted_dict = salted_decryption(orig_dict_list)
-lists = [orig_dict_list, ceasar_list, leetspeak_list, salted_decrypted_dict]
+lists = [orig_dict_list, ceasar_list, salted_decrypted_dict]
 decrypted_dict = {}
 
 # decipher the ceasar, leet and salt
@@ -153,4 +156,5 @@ for i,dictionary in enumerate(lists):
 print(temp_dict)
 print(user_dict)
 # for key, value in decrypted_dict.items():
-#     print(key,':',value)
+#     ans = key+':'+value
+#     print(ans.encode(encoding = 'UTF-8'))
