@@ -23,7 +23,6 @@ for char in cipher_text:
         frequency[char] = 1
             
 frequency_sorted = dict(sorted(frequency.items(), key=lambda item: item[1], reverse=True))
-# print(frequency_sorted)
 
 mapping_dict = dict()
 
