@@ -1,6 +1,7 @@
 import hashlib
 import os
 import itertools
+from analysis import analysis
 
 
 # Manipulation of shadow file
@@ -34,6 +35,9 @@ with open(cmn_dict_path) as cmn_dict_file:
         orig_dict_list.append(i.strip())
 
 orig_list_len = len(orig_dict_list)
+
+
+desubstituted_dict = analysis()
 
 
 # decryption using over different algorithms
@@ -124,33 +128,51 @@ def salted_decryption(dict_list, batch_size=1000000):
             batch.append(i + all_digits)
             if len(batch) >= batch_size:
                 decrypt(batch)
-                print(comb)
+                # print(comb)
                 batch.clear()
     if batch:
         decrypt(batch)
-
+        
+def substitution_decrypt(dict_list):
+    updated_list = []
+    for l in dict_list:
+        substituted_string = ""  # Initialize an empty string to store substituted characters
+        for c in l:
+            if c in desubstituted_dict:
+                # If the character is in the mapping dictionary, substitute it
+                substituted_string += desubstituted_dict[c]
+            else:
+                # If the character is not in the mapping dictionary, keep it unchanged
+                substituted_string += c
+        updated_list.append(substituted_string)  # Add the fully substituted string to the updated list
+    return updated_list  # Return the fully updated list
+                
 
 # updated_user_dict.update(decrypted_dict)
 
 ceasar_list = ceasar_cipher(orig_dict_list)
 leetspeak_list = leetspeak_decrypt(orig_dict_list)
-salted_decrypted_dict = salted_decryption(orig_dict_list)
-lists = [orig_dict_list, ceasar_list, salted_decrypted_dict]
+desubstituted_list = substitution_decrypt(orig_dict_list)
+# print(desubstituted_list)
+# salted_decrypted_dict = salted_decryption(orig_dict_list)
+lists = [orig_dict_list, ceasar_list, leetspeak_list, desubstituted_list]
 decrypted_dict = {}
 
 # decipher the ceasar, leet and salt
 
 
 for i,dictionary in enumerate(lists):
-    if i == 0:    
+    if i == 0:   
         decrypted_dict = decrypt(dictionary)
     elif i == 1:
         decrypted_dict.update(decrypt(dictionary))
     elif i == 2:
-        # print(dictionary)
         decrypted_dict.update(decrypt(dictionary))
-    else:
-        decrypted_dict.update(dictionary)
+    elif i == 3:
+        print(dictionary)
+        decrypted_dict.update(decrypt(dictionary))
+    # else:
+        # decrypted_dict.update(dictionary)
 # print(dict_list)
 
 print(temp_dict)
