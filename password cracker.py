@@ -97,8 +97,7 @@ def ceasar_cipher(dict_list):
 
 def leetspeak_decrypt(dict_list):
     updated_list = []
-    leetspeak_dict = {'A':'4', 'E':'3', 'I': '1', 'O':'0', 'T':'7','S':'5',
-                      'a':'4','e':'3',  'i': '1', 'o':'0', 't':'7','s':'5' }
+    leetspeak_dict = {'a':'4', 'b': '8', 'e':'3', 'i': '!', 'l': '1', 'o':'0', 't':'7','s':'5', 'z':'2', 'g':'6' }
     
     for i in dict_list:
         word_list = list(i)
@@ -161,8 +160,8 @@ if __name__ == "__main__":
     ceasar_list = ceasar_cipher(orig_dict_list)
     leetspeak_list = leetspeak_decrypt(orig_dict_list)
     desubstituted_list = substitution_decrypt(orig_dict_list)
-    salted_decrypted_dict = salted_decryption(orig_dict_list)
-    lists = [orig_dict_list, ceasar_list, desubstituted_list, leetspeak_list, salted_decrypted_dict]
+    # salted_decrypted_dict = salted_decryption(orig_dict_list)
+    lists = [orig_dict_list, ceasar_list, desubstituted_list, leetspeak_list]
     decrypted_dict = {}
 
     # decipher the ceasar, leet and salt
@@ -177,8 +176,8 @@ if __name__ == "__main__":
             decrypted_dict.update(decrypt(dictionary))
         elif i == 3:
             decrypted_dict.update(decrypt(dictionary))
-        else:
-            decrypted_dict.update(dictionary)
+        # else:
+        #     decrypted_dict.update(dictionary)
         
         
     print(temp_dict)
