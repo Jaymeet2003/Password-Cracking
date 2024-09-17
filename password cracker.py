@@ -1,6 +1,8 @@
 import hashlib
 import os
 import itertools
+import multiprocessing
+
 from analysis import analysis
 
 
@@ -118,6 +120,7 @@ def salted_decryption(dict_list, batch_size=1000000):
     # Using itertools.product to generate all combinations of length 5 from digits 0-9
     digits = '0123456789'
     possible_combinations = itertools.product(digits, repeat=5)
+    pool = multiprocessing.Pool(multiprocessing.cpu_count()) 
 
     # Join the tuple to form a string and print
     comb = 0
@@ -127,20 +130,24 @@ def salted_decryption(dict_list, batch_size=1000000):
             comb += 1
             batch.append(i + all_digits)
             if len(batch) >= batch_size:
-                decrypt(batch)
-                # print(comb)
+                pool.apply_async(decrypt(batch), (batch,))
+                print(comb)
                 batch.clear()
     if batch:
-        decrypt(batch)
+        pool.apply_async(decrypt(batch), (batch,))
+        # decrypt(batch)
+    pool.close()  # Close the pool
+    pool.join()
         
 def substitution_decrypt(dict_list):
     updated_list = []
+    inverted_dict = {v: k for k, v in desubstituted_dict.items()}
     for l in dict_list:
         substituted_string = ""  # Initialize an empty string to store substituted characters
         for c in l:
-            if c in desubstituted_dict:
+            if c in inverted_dict:
                 # If the character is in the mapping dictionary, substitute it
-                substituted_string += desubstituted_dict[c]
+                substituted_string += inverted_dict[c]
             else:
                 # If the character is not in the mapping dictionary, keep it unchanged
                 substituted_string += c
@@ -149,34 +156,31 @@ def substitution_decrypt(dict_list):
                 
 
 # updated_user_dict.update(decrypted_dict)
+if __name__ == "__main__":
+    
+    ceasar_list = ceasar_cipher(orig_dict_list)
+    leetspeak_list = leetspeak_decrypt(orig_dict_list)
+    desubstituted_list = substitution_decrypt(orig_dict_list)
+    salted_decrypted_dict = salted_decryption(orig_dict_list)
+    lists = [orig_dict_list, ceasar_list, desubstituted_list, leetspeak_list, salted_decrypted_dict]
+    decrypted_dict = {}
 
-ceasar_list = ceasar_cipher(orig_dict_list)
-leetspeak_list = leetspeak_decrypt(orig_dict_list)
-desubstituted_list = substitution_decrypt(orig_dict_list)
-# print(desubstituted_list)
-# salted_decrypted_dict = salted_decryption(orig_dict_list)
-lists = [orig_dict_list, ceasar_list, leetspeak_list, desubstituted_list]
-decrypted_dict = {}
-
-# decipher the ceasar, leet and salt
+    # decipher the ceasar, leet and salt
 
 
-for i,dictionary in enumerate(lists):
-    if i == 0:   
-        decrypted_dict = decrypt(dictionary)
-    elif i == 1:
-        decrypted_dict.update(decrypt(dictionary))
-    elif i == 2:
-        decrypted_dict.update(decrypt(dictionary))
-    elif i == 3:
-        print(dictionary)
-        decrypted_dict.update(decrypt(dictionary))
-    # else:
-        # decrypted_dict.update(dictionary)
-# print(dict_list)
+    for i,dictionary in enumerate(lists):
+        if i == 0:   
+            decrypted_dict = decrypt(dictionary)
+        elif i == 1:
+            decrypted_dict.update(decrypt(dictionary))
+        elif i == 2:
+            decrypted_dict.update(decrypt(dictionary))
+        elif i == 3:
+            decrypted_dict.update(decrypt(dictionary))
+        else:
+            decrypted_dict.update(dictionary)
+        
+        
+    print(temp_dict)
+    print(user_dict)
 
-print(temp_dict)
-print(user_dict)
-# for key, value in decrypted_dict.items():
-#     ans = key+':'+value
-#     print(ans.encode(encoding = 'UTF-8'))

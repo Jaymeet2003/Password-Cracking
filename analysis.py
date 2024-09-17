@@ -12,6 +12,7 @@ print(cipher_text)
 
 english_freq_order = 'ETAHNOISDLRFGCMUWBPYVKQXJZ'
 
+
 english_freq_order_lower = english_freq_order.lower()
 
 frequency = dict()
@@ -39,15 +40,15 @@ def analysis():
 
 
 
-# desubstituted_text = ''
+desubstituted_text = ''
 
-# for l in cipher_text:
-#     if l in mapping_dict:
-#         desubstituted_text += mapping_dict[l]
-#     else:
-#         desubstituted_text += l
+for l in cipher_text:
+    if l in mapping_dict:
+        desubstituted_text += mapping_dict[l]
+    else:
+        desubstituted_text += l
         
-# print(desubstituted_text)
+print(desubstituted_text)
         
         
 
