@@ -1,0 +1,46 @@
+## explaination on approach for the attack and the time required to crack the passwords for users 1 through 6.
+## total execution time required for your functions to crack the passwords for users 1-6. You can list
+## the total time taken for each user, specifying the duration in seconds, minutes, or hours. Also mention
+## the approaches you followed and any other hurdles/difficulties you faced.
+
+
+While approaching for this assignment, I looke up the hints.txt file which had information of library that can be used to decrypt the passwords.
+I thought of looking for any decryption related function that the documentation of hashlib might have, but unfortunately there was none.
+Therefore, I decided to use the dictionary.txt file, store its content as list and similarly creating a dictionary for shadow file to get the hashes for user.
+
+
+Now to minimize the effort, I tried bruteforcing the dictionary consisting of user hashes by comparing the list of dictionary and converting to the hash using the different algorithms.
+if found equal I would pop the copy of dictionary of shadow file and update the copy with the word that is exact match for password in dictionary.txt.
+Note: To make code more dynamic, I pass wach word of dictionary.txt to hash with the list of algorithms, then comparing it.
+
+The above approach helped me to decrypt user1, user5 and user6.
+
+Now for rest of the users I knew that user3 useas ceasar cipher from the description of this project.
+My approach was to create all possible combinations of the ceasar cipher using itertools library and append it to the original list and passing the list to the decryption function used to crack user1,user5 and user6.
+Note: I knew how to come up for the formula for ceasar cipher from CS 488.
+
+Now I tried approaching for the other users which were user2, user4. Again as I knew I wont be able to get user7 until I reach Task-2.
+And I also knew that SALT will be time consuming as description file states that SALT is 5 digit in range 0-9 which has 1000000 such combinations,
+For all of the words in dictionary, I will have to look all possible combinations which is length of dictionary.txt * 100000.
+So, I started leet Speak decryption process. To crack this, I was clear that i have to have some sort of mapping, 
+which lead me to use dictionary with the mappings. This was then passed to the initail decryption function and I was able to crack user4.
+
+Difficulties: I used some of the mappings as listed in file as an example but they were not enough so, I tried googling some more of them.
+    This still didn't help me a lot so, I tried to seek help from other students and instructors in piazza. Which gave me a blur idea of the mappings I was missing,
+    but after long analysis of the instructor's recommendations i was able to crack the exact mapping.
+
+
+For SALT, I looked up on how can I approach the cracking efficiently with a dynamic approach. So iterated through words in dictionary.txt appending it to all combinations of 1000000 numbers,
+Passing it to initial decryption dunction, which helped me cracked user2.
+
+Note: I used the multiprocessing from CS361 and CS454, to improve performance.
+
+Difficulties: I had difficulties decrypting this huge file as it created a memory overflow, so I passed the list as batch to decrypt function,
+clearing it after operating on it until I hit through all of the words in dictionary.txt with 1000000 combinations appended to it.
+
+This left me with user7 which is TASK-2
+
+Now for user7 uses analysis file to crack the password.
+
+
+
