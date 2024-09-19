@@ -44,3 +44,16 @@ Now for user7 uses analysis file to crack the password.
 
 
 
+
+Time to crack users
+
+USER            Elapsed_Time            Method_used
+    
+user1                                   sha256
+user2                                   
+user3                                   Ceasar + sha512
+user4
+user5                                   sha3_224
+user6                                   sha224
+user7                                   substitution + sha3_512
+

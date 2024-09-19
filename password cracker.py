@@ -64,6 +64,8 @@ def decrypt(dict_list):
                         temp_dict[key] = orig_dict_list[index]
                         # updating the dictionary to remove the cracked user
                         user_dict.pop(key)
+                else:
+                    break
     return temp_dict
 
 # ceasar cipher
@@ -158,8 +160,8 @@ def decrypt_all():
     ceasar_dict = decrypt(ceasar_cipher(orig_dict_list))
     leetspeak_dict = decrypt(leetspeak_decrypt(orig_dict_list))
     desubstituted_dec = decrypt(substitution_decrypt(orig_dict_list))
-    salted_decrypted_dict = salted_decryption(orig_dict_list)
-    decrypted_dict = {**basic_dict, **ceasar_dict, **leetspeak_dict, **desubstituted_dec, **salted_decrypted_dict}
+    salted_decryption(orig_dict_list)
+    decrypted_dict = {**basic_dict, **ceasar_dict, **leetspeak_dict, **desubstituted_dec}
     return decrypted_dict
 
 # updated_user_dict.update(decrypted_dict)
