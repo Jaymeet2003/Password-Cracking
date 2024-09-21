@@ -33,7 +33,7 @@ for cipher_char, _ in filtered_frequency.items():
     if len(mapping_dict) < len(english_freq_order_lower):
         mapping_dict[cipher_char] = english_freq_order_lower[len(mapping_dict)]
         
-print(mapping_dict)
+# print(mapping_dict)
 
 def analysis():
     return mapping_dict
@@ -48,7 +48,7 @@ for l in cipher_text:
     else:
         desubstituted_text += l
         
-print(desubstituted_text)
+# print(desubstituted_text)
         
         
 

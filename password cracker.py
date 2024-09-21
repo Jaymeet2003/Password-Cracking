@@ -1,7 +1,7 @@
 import hashlib
 import os
-import itertools
-import multiprocessing
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 from analysis import analysis
 
@@ -23,7 +23,6 @@ with open(file_path) as shadow_file:
         # creating the dictionary from the result above into user_dict, strip function removes any whitespaces and newline characters
         updated_user_dict[user] = passwd.strip()
 
-temp_dict = updated_user_dict.copy()
 user_dict = updated_user_dict.copy()
 
 # Manipulation of dictionary file
@@ -40,38 +39,38 @@ orig_list_len = len(orig_dict_list)
 
 
 # decryption using over different algorithms
-def decrypt(dict_list):
+def decrypt(dict_list, method):
     # print(dict_list)
+    start_time = time.time()
+    temp_dict = user_dict.copy()
+    
     global index
-    for ind,i in enumerate(dict_list):
-        for j in enc_list:
-            # creating a new hashlib function by iterating over the algorithms from list
-            h = hashlib.new(j)
-            temp = i 
-            # creating a copy to manipulate the data
-            # encoding the ascii to byte and then passing it to hash function
-            h.update(temp.encode())
-            # combinbing the hash without the whitespace and newline
-            temp = h.hexdigest()
-            
-        # if needed we can update the algorithm that cracked the password
+    for ind,i in enumerate(dict_list):    
+        h = hashlib.new(method)
+        temp = i 
+        # creating a copy to manipulate the data
+        # encoding the ascii to byte and then passing it to hash function
+        h.update(temp.encode())
+        # combinbing the hash without the whitespace and newline
+        temp = h.hexdigest()
+    
+    
+        for key, value in temp_dict.items():
+            if temp == value:
+                index = ind % orig_list_len
+                updated_user_dict[key] = orig_dict_list[index]
+                end_time = time.time()
+                user_dict.pop(key)
+                print(key)
+                print(f"Elapsed time: {end_time - start_time:.2f} seconds")
+                return updated_user_dict
 
-        # iterating over the dictionary, manipulating the data with cracked password
-            for key, value in temp_dict.items():
-                if len(user_dict) != 0:
-                    if temp == value:
-                        index = ind % orig_list_len
-                        temp_dict[key] = orig_dict_list[index]
-                        # updating the dictionary to remove the cracked user
-                        user_dict.pop(key)
-                else:
-                    break
-    return temp_dict
 
 # ceasar cipher
 
 
 def ceasar_cipher(dict_list):
+    print("ceasar")
     result = ""
     updated_list = []
     for j in range(1, 26):
@@ -96,6 +95,7 @@ def ceasar_cipher(dict_list):
 
 
 def leetspeak_decrypt(dict_list):
+    # print("leetspeak")
     updated_list = []
     leetspeak_dict = {'a':'4', 'b': '8', 'e':'3', 'i': '!', 'l': '1', 'o':'0', 't':'7','s':'5', 'z':'2', 'g':'6' }
     
@@ -114,31 +114,27 @@ def leetspeak_decrypt(dict_list):
     return updated_list
 
 
-def salted_decryption(dict_list, batch_size=10000000):
-    batch = []
-    # Using itertools.product to generate all combinations of length 5 from digits 0-9
-    digits = '0123456789'
-    possible_combinations = itertools.product(digits, repeat=5)
-    pool = multiprocessing.Pool(multiprocessing.cpu_count()) 
-
-    # Join the tuple to form a string and print
-    comb = 0
-    for combo in possible_combinations:
-        all_digits = ''.join(combo)
-        for i in dict_list:
-            comb += 1
-            batch.append(i + all_digits)
-            if len(batch) >= batch_size:
-                pool.apply_async(decrypt(batch), (batch,))
-                print(comb)
-                batch.clear()
-    if batch:
-        pool.apply_async(decrypt(batch), (batch,))
-        # decrypt(batch)
-    pool.close()  # Close the pool
-    pool.join()
+def salted_decryption(dict_list):
+    print("salted")
+    updated_list = []
+    
+    
+    for w in dict_list:
+        for i in range(0,1000000):
+            salt = f'{i:05d}'
+            salted_word = w + salt
+            
+            hashed_word = hashlib.md5(salted_word.encode()).hexdigest()  
+            print(salted_word)
+            
+            for key,value in user_dict.items():
+                if hashed_word == value:
+                    updated_user_dict[key] = value
+                    user_dict.pop(key)
+                    return
         
 def substitution_decrypt(dict_list):
+    # print("substitution")
     updated_list = []
     desubstituted_dict = analysis()
     inverted_dict = {v: k for k, v in desubstituted_dict.items()}
@@ -155,21 +151,20 @@ def substitution_decrypt(dict_list):
     return updated_list  # Return the fully updated list
 
 
-def decrypt_all():
-    basic_dict = decrypt(orig_dict_list)
-    ceasar_dict = decrypt(ceasar_cipher(orig_dict_list))
-    leetspeak_dict = decrypt(leetspeak_decrypt(orig_dict_list))
-    desubstituted_dec = decrypt(substitution_decrypt(orig_dict_list))
-    salted_decryption(orig_dict_list)
-    decrypted_dict = {**basic_dict, **ceasar_dict, **leetspeak_dict, **desubstituted_dec}
-    return decrypted_dict
-
-# updated_user_dict.update(decrypted_dict)
 if __name__ == "__main__":
     
-    decrypted_data = decrypt_all()
     # decipher the ceasar, leet and salt
-            
-    print(decrypted_data)
-    print(user_dict)
-
+    user1 = decrypt(orig_dict_list, 'sha256')
+    user3_list = ceasar_cipher(orig_dict_list)
+    user3 = decrypt(user3_list, 'sha512')
+    user4_list = leetspeak_decrypt(orig_dict_list)
+    user4 = decrypt(user4_list,'sha1')
+    user5 = decrypt(orig_dict_list, 'sha3_224')
+    user6 = decrypt(orig_dict_list, 'sha224')
+    user7_list = substitution_decrypt(orig_dict_list)
+    user7 = decrypt(user7_list, 'sha3_512')
+    user2 = salted_decryption(orig_dict_list)
+    
+    
+ 
+    print(updated_user_dict)
