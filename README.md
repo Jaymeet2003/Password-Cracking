@@ -1,4 +1,4 @@
-# Homework 1 - Network Security (CS 468)
+# Password Cracker
 
 ## Overview
 
