@@ -1,155 +1,183 @@
+
 import hashlib
 import os
-import time
+import itertools
+import multiprocessing
+
 from analysis import analysis
 
-# Manipulation of shadow file to extract usernames and hashed passwords
-curr_dir = os.getcwd()  # Get the current working directory
-file_path = os.path.join(curr_dir, 'shadow')  # Locate the shadow file containing usernames and password hashes
 
-# Initialize a dictionary to store usernames and their corresponding hashed passwords
+# Manipulation of shadow file
+
+curr_dir = os.getcwd()              # Getting the currunt working directory
+# locating and storing the path of shadow file to be read
+file_path = os.path.join(curr_dir, 'shadow')
 updated_user_dict = dict()
-
-# Reading the shadow file line by line and extracting the usernames and password hashes
+enc_list = ['md5', 'sha1', 'sha224', 'sha256',
+            'sha384', 'sha512', 'sha3_224', 'sha3_256',
+            'sha3_224', 'sha3_384', 'sha3_512']                                       # creating a list of encyrption techniques
+# reading the file and storing its contents to the shadow_file variable
 with open(file_path) as shadow_file:
     for i in shadow_file:
-        # Split each line at the first occurrence of ':' to separate the username and hashed password
+        # splitting the file into parts from first detection of ':' and stroing the contents in user and passwd
         user, passwd = i.split(':', 1)
-        # Add the username and cleaned hashed password to the dictionary
+        # creating the dictionary from the result above into user_dict, strip function removes any whitespaces and newline characters
         updated_user_dict[user] = passwd.strip()
 
-# Make a copy of the shadow file dictionary for manipulation during decryption
+temp_dict = updated_user_dict.copy()
 user_dict = updated_user_dict.copy()
 
-# Manipulation of dictionary file to create a list of potential passwords
-orig_dict_list = []  # Initialize a list to hold words from the dictionary file
-cmn_dict_path = os.path.join(curr_dir, 'dictionary.txt')  # Locate the dictionary file
+# Manipulation of dictionary file
 
-# Read the dictionary file and store each line (word) as an element in the list
+orig_dict_list = []
+# locating and storing the path of dictionary file to be read
+cmn_dict_path = os.path.join(curr_dir, 'dictionary.txt')
 with open(cmn_dict_path) as cmn_dict_file:
     for i in cmn_dict_file:
-        orig_dict_list.append(i.strip())  # Strip newline characters and add the word to the list
+        # creating list for the data in dictionary file
+        orig_dict_list.append(i.strip())
 
-orig_list_len = len(orig_dict_list)  # Store the length of the original dictionary list
+orig_list_len = len(orig_dict_list)
 
-# Function to decrypt passwords using different hashing algorithms
-def decrypt(dict_list, method):
-    start_time = time.time()  # Start timing the decryption process
-    temp_dict = user_dict.copy()  # Create a copy of user_dict to avoid modifying the original during iteration
-    
-    global index  # Define a global index variable to track decrypted entries
-    for ind, i in enumerate(dict_list):
-        h = hashlib.new(method)  # Initialize a new hashing object with the specified algorithm
-        temp = i  # Copy the current word for hashing
-        h.update(temp.encode())  # Encode the word to bytes and hash it
-        temp = h.hexdigest()  # Convert the hash to a hexadecimal string
-    
-        # Check if the computed hash matches any user password hash in temp_dict
-        for key, value in temp_dict.items():
-            if temp == value:
-                index = ind % orig_list_len  # Find the index of the original word in the dictionary
-                updated_user_dict[key] = orig_dict_list[index]  # Update the user dictionary with the decrypted password
-                end_time = time.time()  # End timing
-                user_dict.pop(key)  # Remove the decrypted user from the original user_dict
-                print(key)  # Print the username that was decrypted
-                print(f"Elapsed time: {end_time - start_time:.2f} seconds")  # Print the time taken to decrypt
-                return updated_user_dict  # Return the updated dictionary
 
-# Function to apply Caesar cipher shifts to each word in the dictionary list
+desubstituted_dict = analysis()
+
+
+# decryption using over different algorithms
+def decrypt(dict_list):
+    # print(dict_list)
+    global index
+    for ind,i in enumerate(dict_list):
+        for j in enc_list:
+            # creating a new hashlib function by iterating over the algorithms from list
+            h = hashlib.new(j)
+            temp = i 
+            # creating a copy to manipulate the data
+            # encoding the ascii to byte and then passing it to hash function
+            h.update(temp.encode())
+            # combinbing the hash without the whitespace and newline
+            temp = h.hexdigest()
+            
+        # if needed we can update the algorithm that cracked the password
+
+        # iterating over the dictionary, manipulating the data with cracked password
+            for key, value in temp_dict.items():
+                if len(user_dict) != 0:
+                    if temp == value:
+                        index = ind % orig_list_len
+                        temp_dict[key] = orig_dict_list[index]
+                        # updating the dictionary to remove the cracked user
+                        user_dict.pop(key)
+    return temp_dict
+
+# ceasar cipher
+
+
 def ceasar_cipher(dict_list):
-    print("ceasar")  # Print cipher type being used
-    result = ""  # Initialize an empty string to store the shifted characters
-    updated_list = []  # List to hold all shifted versions of each word
-    
-    # Iterate through all possible shifts (1 to 25)
+    result = ""
+    updated_list = []
     for j in range(1, 26):
-        # Iterate through each word in the dictionary list
         for i in dict_list:
             for char in i:
-                if char.isalpha():  # Check if the character is alphabetic
-                    # Determine the ASCII offset based on whether the character is upper or lower case
-                    ascii_offset = 65 if char.isupper() else 97
+                if char.isalpha():
+                    if char.isupper():
+                        ascii_offset = 65
+                    else:
+                        ascii_offset = 97
 
-                    # Calculate the shifted character and append to the result string
-                    shifted_char = chr(((ord(char) - ascii_offset + j) % 26) + ascii_offset)
+                    # to find the shift
+                    shifted_char = chr(
+                        ((ord(char) - ascii_offset + j) % 26) + ascii_offset)
                     result += shifted_char
+
                 else:
-                    result += char  # Keep non-alphabetic characters unchanged
-            updated_list.append(result)  # Add the shifted word to the updated list
-            result = ""  # Reset the result for the next word
-    return updated_list  # Return the list of all shifted words
+                    result += char
+            updated_list.append(result)
+            result = ""
+    return updated_list
 
-# Function to decrypt words using leet speak substitutions
+
 def leetspeak_decrypt(dict_list):
-    updated_list = []  # List to hold leet speak variations of words
-    # Dictionary defining leet speak substitutions
-    leetspeak_dict = {'a': '4', 'b': '8', 'e': '3', 'i': '!', 'l': '1', 'o': '0', 't': '7', 's': '5', 'z': '2', 'g': '6'}
+    updated_list = []
+    leetspeak_dict = {'a':'4', 'b': '8', 'e':'3', 'i': '!', 'l': '1', 'o':'0', 't':'7','s':'5', 'z':'2', 'g':'6' }
     
-    # Iterate through each word in the dictionary list
     for i in dict_list:
-        word_list = list(i)  # Convert the word to a list of characters
-        for j, char in enumerate(word_list):
-            if char in leetspeak_dict:  # Check if the character has a leet substitution
-                word_list[j] = leetspeak_dict[char]  # Substitute the character with its leet equivalent
+        word_list = list(i)
+        for j,char in enumerate(word_list):
+            if char in leetspeak_dict:
+                # print(char, leetspeak_dict[char])
+                word_list[j] = leetspeak_dict[char]
                 
-        updated_word = ''.join(word_list)  # Reconstruct the word from the substituted characters
-        updated_list.append(updated_word)  # Add the substituted word to the list
-    return updated_list  # Return the updated list of leet speak words
+                        
+        updated_word = ''.join(word_list)
+        updated_list.append(updated_word)
+    # print(updated_list)
 
-# Function to decrypt passwords that are salted using a 5-digit salt
-def salted_decryption(dict_list):
-    print("salted")  # Print the decryption type being used
-    updated_list = []  # Initialize an empty list for future use (if needed)
-    
-    # Iterate through each word in the dictionary list
-    for w in dict_list:
-        # Try each 5-digit salt (00000 to 99999)
-        for i in range(0, 1000000):
-            salt = f'{i:05d}'  # Format the current number as a 5-digit string
-            salted_word = w + salt  # Append the salt to the word
-            
-            # Hash the salted word using MD5
-            hashed_word = hashlib.md5(salted_word.encode()).hexdigest()
-            print(salted_word)  # Print the current salted word being hashed
-            
-            # Check if the hash matches any stored hash in the user dictionary
-            for key, value in user_dict.items():
-                if hashed_word == value:
-                    updated_user_dict[key] = value  # Update the decrypted password for the user
-                    user_dict.pop(key)  # Remove the user from the original dictionary
-                    return
+    return updated_list
 
-# Function to decrypt passwords using character substitution analysis
+
+def salted_decryption(dict_list, batch_size=1000000):
+    batch = []
+    # Using itertools.product to generate all combinations of length 5 from digits 0-9
+    digits = '0123456789'
+    possible_combinations = itertools.product(digits, repeat=5)
+    pool = multiprocessing.Pool(multiprocessing.cpu_count()) 
+
+    # Join the tuple to form a string and print
+    comb = 0
+    for combo in possible_combinations:
+        all_digits = ''.join(combo)
+        for i in dict_list:
+            comb += 1
+            batch.append(i + all_digits)
+            if len(batch) >= batch_size:
+                pool.apply_async(decrypt(batch), (batch,))
+                print(comb)
+                batch.clear()
+    if batch:
+        pool.apply_async(decrypt(batch), (batch,))
+        # decrypt(batch)
+    pool.close()  # Close the pool
+    pool.join()
+        
 def substitution_decrypt(dict_list):
-    updated_list = []  # List to hold substituted variations of words
-    desubstituted_dict = analysis()  # Get the character substitution mapping dictionary from the analysis function
-    inverted_dict = {v: k for k, v in desubstituted_dict.items()}  # Invert the mapping dictionary for substitution
-    
-    # Iterate through each word in the dictionary list
+    updated_list = []
+    inverted_dict = {v: k for k, v in desubstituted_dict.items()}
     for l in dict_list:
         substituted_string = ""  # Initialize an empty string to store substituted characters
         for c in l:
-            if c in inverted_dict:  # If the character is in the inverted mapping dictionary, substitute it
+            if c in inverted_dict:
+                # If the character is in the mapping dictionary, substitute it
                 substituted_string += inverted_dict[c]
             else:
-                substituted_string += c  # If not in the dictionary, keep the character unchanged
+                # If the character is not in the mapping dictionary, keep it unchanged
+                substituted_string += c
         updated_list.append(substituted_string)  # Add the fully substituted string to the updated list
-    return updated_list  # Return the list of substituted words
+    return updated_list  # Return the fully updated list
+                
 
-# Main execution block
+# updated_user_dict.update(decrypted_dict)
 if __name__ == "__main__":
     
-    # Decrypt passwords using various approaches based on knowledge of cipher types and salts
-    user1 = decrypt(orig_dict_list, 'sha256')  # Decrypt using SHA-256
-    user3_list = ceasar_cipher(orig_dict_list)  # Apply Caesar cipher shifts to the dictionary
-    user3 = decrypt(user3_list, 'sha512')  # Decrypt shifted words using SHA-512
-    user4_list = leetspeak_decrypt(orig_dict_list)  # Apply leet speak substitutions to the dictionary
-    user4 = decrypt(user4_list, 'sha1')  # Decrypt leet speak words using SHA-1
-    user5 = decrypt(orig_dict_list, 'sha3_224')  # Decrypt using SHA3-224
-    user6 = decrypt(orig_dict_list, 'sha224')  # Decrypt using SHA-224
-    user7_list = substitution_decrypt(orig_dict_list)  # Apply substitution analysis to the dictionary
-    user7 = decrypt(user7_list, 'sha3_512')  # Decrypt substituted words using SHA3-512
-    user2 = salted_decryption(orig_dict_list)  # Decrypt salted words using MD5
-    
-    # Print the final updated dictionary containing decrypted passwords for each user
-    print(updated_user_dict)
+    ceasar_list = ceasar_cipher(orig_dict_list)
+    leetspeak_list = leetspeak_decrypt(orig_dict_list)
+    desubstituted_list = substitution_decrypt(orig_dict_list)
+    salted_decrypted_dict = salted_decryption(orig_dict_list)
+    lists = [orig_dict_list, ceasar_list, desubstituted_list, leetspeak_list, salted_decrypted_dict]
+    decrypted_dict = {}
+
+    # decipher the ceasar, leet and salt
+
+
+    for i,dictionary in enumerate(lists):
+        if i == 0:   
+            decrypted_dict = decrypt(dictionary)
+        elif i == 1:
+            decrypted_dict.update(decrypt(dictionary))
+        elif i == 2:
+            decrypted_dict.update(decrypt(dictionary))
+        elif i == 3:
+            decrypted_dict.update(decrypt(dictionary))
+        
+        
+    print(temp_dict)
