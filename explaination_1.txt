@@ -1,0 +1,25 @@
+## explaination on approach for the attack and the time required to crack the passwords for users 1 through 6.
+## total execution time required for your functions to crack the passwords for users 1-6. You can list
+## the total time taken for each user, specifying the duration in seconds, minutes, or hours. Also mention
+## the approaches you followed and any other hurdles/difficulties you faced.
+
+
+For this assignment, I initially referred to the hints.txt file, which contained information about libraries that could be used to decrypt the passwords. I explored the documentation of the `hashlib` library to find any decryption-related functions but found none. As a result, I opted to use the dictionary.txt file, storing its content as a list, and created a dictionary from the shadow file to retrieve the hashes for each user. To minimize effort, I attempted brute-forcing the dictionary against user hashes by comparing the dictionary list and converting each entry into a hash using different algorithms identified from the shadow file. This approach helped me successfully decrypt the passwords for user1, user5, and user6. For user3, knowing from the project description that it used Caesar cipher, I generated all possible combinations using the `itertools` library and appended these to the original list, passing them into the decryption function used earlier.
+
+For users such as user2 and user4, I approached the task differently. User4 required a leet speak decryption process, so I used a mapping dictionary to convert common leet speak substitutions, enhancing the list of potential passwords that were then passed into the initial decryption function. I sought guidance from students and instructors on Piazza to refine the mappings, eventually cracking user4's password. For user2, I knew that decrypting with SALT would be resource-intensive, as it involved one million combinations of five-digit salts for each word in the dictionary. I leveraged multiprocessing techniques learned in CS361 and CS454 to improve performance, processing the words in batches to avoid memory overflow issues. Finally, user7’s password required frequency analysis and an ad hoc method to piece together meaningful words, which was challenging and time-consuming but eventually successful through persistent analysis and adjustments.
+
+
+
+
+Time to crack users
+
+USER            Elapsed_Time            Method_used
+    
+user1           0.00 seconds             sha256
+user2           0.0 seconds             SALT + md5
+user3           0.04 seconds             Ceasar + sha512
+user4           0.00 seconds             leetspeak + sha1
+user5           0.00 seconds             sha3_224
+user6           0.00 seconds             sha224
+user7           0.00 seconds             substitution + sha3_512
+
